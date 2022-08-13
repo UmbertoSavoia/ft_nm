@@ -25,12 +25,16 @@ int     main(int ac, char **av)
         parse_arg(ac, av, &info);
     }
 
+    /**
+     * DEBUG
+     */
     for (t_file *tmp = info.files; tmp; tmp = tmp->next)
         printf("%s\n", tmp->name);
     for (unsigned char i = 0; i < 128; ++i)
         if (info.opt[i])
             printf("%c - ", i);
     puts("");
+    // ----------------------
 
     clear_list(&(info.files));
 }
