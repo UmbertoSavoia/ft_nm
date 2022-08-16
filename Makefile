@@ -18,7 +18,11 @@ clean:
 	$(RM) $(OBJ)
 
 fclean: clean
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) ./test/test1.out ./test/test2.out
+
+_test:
+	$(CC) ./test/test1.c -o ./test/test1.out
+	$(CC) ./test/test2.c -o ./test/test2.out
 
 re: fclean all
 

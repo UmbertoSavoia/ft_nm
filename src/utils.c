@@ -1,6 +1,6 @@
 #include "../include/ft_nm.h"
 
-t_file  *new_node(char *name)
+t_file  *new_file_node(char *name)
 {
     t_file *ret = 0;
 
@@ -11,7 +11,7 @@ t_file  *new_node(char *name)
     return ret;
 }
 
-void    add_list(t_file **head, t_file *new)
+void    add_file_list(t_file **head, t_file *new)
 {
     if (!*head) {
         (*head) = new;
@@ -23,10 +23,65 @@ void    add_list(t_file **head, t_file *new)
     }
 }
 
-void    clear_list(t_file **head)
+void    clear_file_list(t_file **head)
 {
     t_file *tmp = 0;
     t_file *t = 0;
+
+    tmp = *head;
+    while (tmp) {
+        t = tmp;
+        tmp = tmp->next;
+        free(t);
+    }
+    *head = 0;
+}
+
+t_symbol    *new_symbol_node(char *name, uint16_t ndx)
+{
+    t_symbol *ret = 0;
+
+    if (!(ret = malloc(sizeof(t_symbol))))
+        return 0;
+    memset(ret, 0, sizeof(t_symbol));
+    ret->name = name;
+    ret->ndx = ndx;
+    return ret;
+}
+
+void    add_symbol_list(t_symbol **head, t_symbol *new)
+{
+    t_symbol *tmp = 0;
+
+    if (!*head) {
+        *head = new;
+    } else {
+        for (tmp = *head; tmp->next; tmp = tmp->next);
+        tmp->next = new;
+        new->prev = tmp;
+    }
+}
+
+void    add_in_order_symbol_list(t_symbol **head, t_symbol *new, int (*compare)())
+{
+    if (!*head || compare((*head)->name, new->name, ft_strcasecmp) >= 0) {
+        new->next = *head;
+        *head = new;
+        (*head)->prev = new;
+    } else {
+        t_symbol *tmp = *head;
+        while (tmp->next && compare(tmp->next->name, new->name, ft_strcasecmp) < 0)
+            tmp = tmp->next;
+        new->next = tmp->next;
+        tmp->next = new;
+        new->prev = tmp;
+    }
+}
+
+void    clear_symbol_list(t_symbol **head)
+{
+    t_symbol *tmp = 0;
+    t_symbol *t = 0;
 
     tmp = *head;
     while (tmp) {
@@ -42,4 +97,64 @@ char    is_opt(char c)
     if (c == 'a' || c == 'g' || c == 'u' || c == 'r' || c == 'p')
         return c;
     return 0;
+}
+
+void    *map_file(t_file *file)
+{
+    int         fd = 0;
+    void        *ret = 0;
+    struct stat buf = {0};
+
+    if ((fd = open(file->name, O_RDONLY)) < 0)
+        error(file->name, "No such file");
+    if (fstat(fd, &buf) < 0)
+        error(file->name, "fstat error");
+    file->size = buf.st_size;
+    if ((ret = mmap(0, buf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED)
+        error(file->name, "mmap error");
+    close(fd);
+    return ret;
+}
+
+int     check_file(t_file *file, void *mem)
+{
+    unsigned char *e_ident = mem;
+    unsigned char magic[] = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3};
+
+    if (memcmp(mem, magic, sizeof(magic)))
+        error(file->name, "file format not recognized");
+    if (e_ident[EI_CLASS] != ELFCLASS32 && e_ident[EI_CLASS] != ELFCLASS64)
+        error(file->name, "class not recognized");
+    return 1;
+}
+
+int     ft_strcasecmp(const char *s1, const char *s2)
+{
+    int c1, c2;
+
+    do {
+        c1 = tolower(*s1++);
+        c2 = tolower(*s2++);
+        if (c1 == '.' || c1 == '_') c1 = ' ';
+        if (c2 == '.' || c2 == '_') c2 = ' ';
+    } while (c1 == c2 && c1 != 0);
+    return c1 - c2;
+}
+
+int     nm_compare(char *_s1, char *_s2, int (*compare)())
+{
+    char *s1 = _s1;
+    char *s2 = _s2;
+    int  ret = 0;
+
+    while (*s1 && !isalpha(*s1)) {
+        s1++;
+    }
+    while (*s2 && !isalpha(*s2)) {
+        s2++;
+    }
+    ret = compare(s1, s2);
+    if (!ret && *_s1 == '.' && *_s2 == '_')
+        return *_s1 - *_s2;
+    return ret;
 }
