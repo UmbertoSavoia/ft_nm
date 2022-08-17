@@ -10,6 +10,7 @@ void    parse_arg(int ac, char **av, t_info *info)
             }
         } else {
             add_file_list(&(info->files), new_file_node(av[i]));
+            info->nfiles++;
         }
     }
     if (info->opt['p'])
@@ -20,28 +21,53 @@ void    parse_arg(int ac, char **av, t_info *info)
         info->opt['a'] = 0;
 }
 
-int     do_file(t_info *info)
+void    print_line(t_symbol *s, int arch)
+{
+    if (s->ndx == SHN_UNDEF)
+        printf("%*c", arch, ' ');
+    else
+        printf("%0*lx", arch, s->value);
+    printf(" %c %s\n", s->sym_table, s->name);
+}
+
+void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
+{
+    if (info->nfiles > 1)
+        printf("\n%s:\n", file->name);
+    for (t_symbol *s = sym; s; s = s->next) {
+        if (info->opt['u'] && s->ndx == SHN_UNDEF)
+            print_line(s, arch);
+        else if (info->opt['g'] && (s->bind == STB_WEAK || s->bind == STB_GLOBAL))
+            print_line(s, arch);
+        else if (info->opt['a'])
+            print_line(s, arch);
+        else if ((s->type != STT_SECTION) && (s->type != STT_FILE))
+            print_line(s, arch);
+    }
+}
+
+int     do_file(t_info *info, t_file *file)
 {
     void        *mem = 0;
     t_symbol    *head = 0;
 
-    if (!(mem = map_file(info->files)))
+    if (!(mem = map_file(file)))
         return 0;
-    if (!check_file(info->files, mem)) {
-        munmap(mem, info->files->size);
+    if (!check_file(file, mem)) {
+        munmap(mem, file->size);
         return 0;
     }
     if (((unsigned char *)mem)[EI_CLASS] == ELFCLASS32) {
         save_symbol(info, &head, mem, (Elf32_Ehdr *)mem, (Elf32_Shdr *)0, (Elf32_Sym *)0);
+        print_symbols(info, file, head, sizeof(Elf32_Addr)*2);
     } else {
         save_symbol(info, &head, mem, (Elf64_Ehdr *)mem, (Elf64_Shdr *)0, (Elf64_Sym *)0);
+        print_symbols(info, file, head, sizeof(Elf64_Addr)*2);
     }
-
-    for (t_symbol *t = head; t; t = t->next)
-        printf("%s\n", t->name);
-
+    if (!head)
+        fprintf(stderr, "ft_nm: '%s': %s\n", file->name, "no symbols");
     clear_symbol_list(&head);
-    munmap(mem, info->files->size);
+    munmap(mem, file->size);
     return 1;
 }
 
@@ -56,22 +82,9 @@ int     main(int ac, char **av)
         parse_arg(ac, av, &info);
     }
     for (t_file *file = info.files; file; file = file->next) {
-        if (!do_file(&info))
+        if (!do_file(&info, file))
             error = 1;
     }
-
-    /**
-     * DEBUG
-     */
-     /*
-    for (t_file *tmp = info.files; tmp; tmp = tmp->next)
-        printf("%s\n", tmp->name);
-    for (unsigned char i = 0; i < 128; ++i)
-        if (info.opt[i])
-            printf("%c - ", i);
-    puts("");
-    // ----------------------*/
-
     clear_file_list(&(info.files));
     return error;
 }

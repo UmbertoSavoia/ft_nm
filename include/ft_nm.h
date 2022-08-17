@@ -22,6 +22,7 @@ typedef struct  s_file
 typedef struct  s_info
 {
     t_file  *files;
+    int     nfiles;
     char    opt[128];
 }               t_info;
 
@@ -49,7 +50,7 @@ typedef struct  s_symbol
 t_file      *new_file_node(char *name);
 void        add_file_list(t_file **head, t_file *new);
 void        clear_file_list(t_file **head);
-t_symbol    *new_symbol_node(char *name, uint16_t ndx);
+t_symbol    *new_symbol_node(t_symbol param);
 void        add_symbol_list(t_symbol **head, t_symbol *new);
 void        add_in_order_symbol_list(t_symbol **head, t_symbol *new, int (*compare)());
 void        clear_symbol_list(t_symbol **head);
@@ -73,12 +74,18 @@ do {                                                                        \
             tot_sym = shdr[i].sh_size / shdr[i].sh_entsize;                 \
             sym = mem + shdr[i].sh_offset;                                  \
             for (size_t j = 1; j < tot_sym; ++j) {                          \
-                node = new_symbol_node(                                     \
+                node = new_symbol_node((t_symbol) {                         \
                             (sym[j].st_info == STT_SECTION) ?               \
                                 (strtab + shdr[sym[j].st_shndx].sh_name) :  \
                                 (symtab + sym[j].st_name),                  \
-                            sym[j].st_shndx                                 \
-                        );                                                  \
+                            ELF64_ST_TYPE(sym[j].st_info),                  \
+                            ELF64_ST_BIND(sym[j].st_info),                  \
+                            sym[j].st_shndx,                                \
+                            sym[j].st_value,                                \
+                            ' ',                                            \
+                            0,                                              \
+                            0                                               \
+                        });                                                 \
                 if ((info)->opt['p'])                                       \
                     add_symbol_list(head, node);                            \
                 else                                                        \

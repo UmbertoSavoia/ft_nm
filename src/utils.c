@@ -37,15 +37,14 @@ void    clear_file_list(t_file **head)
     *head = 0;
 }
 
-t_symbol    *new_symbol_node(char *name, uint16_t ndx)
+t_symbol    *new_symbol_node(t_symbol param)
 {
     t_symbol *ret = 0;
 
     if (!(ret = malloc(sizeof(t_symbol))))
         return 0;
     memset(ret, 0, sizeof(t_symbol));
-    ret->name = name;
-    ret->ndx = ndx;
+    memcpy(ret, &param, sizeof(t_symbol));
     return ret;
 }
 
@@ -133,7 +132,11 @@ int     ft_strcasecmp(const char *s1, const char *s2)
     int c1, c2;
 
     do {
+        while (*s1 && !isalpha(*s1) && !isdigit(*s1))
+            s1++;
         c1 = tolower(*s1++);
+        while (*s2 && !isalpha(*s2) && !isdigit(*s2))
+            s2++;
         c2 = tolower(*s2++);
         if (c1 == '.' || c1 == '_') c1 = ' ';
         if (c2 == '.' || c2 == '_') c2 = ' ';
@@ -147,12 +150,10 @@ int     nm_compare(char *_s1, char *_s2, int (*compare)())
     char *s2 = _s2;
     int  ret = 0;
 
-    while (*s1 && !isalpha(*s1)) {
+    while (*s1 && !isalpha(*s1))
         s1++;
-    }
-    while (*s2 && !isalpha(*s2)) {
+    while (*s2 && !isalpha(*s2))
         s2++;
-    }
     ret = compare(s1, s2);
     if (!ret && *_s1 == '.' && *_s2 == '_')
         return *_s1 - *_s2;
