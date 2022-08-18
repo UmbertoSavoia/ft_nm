@@ -57,8 +57,41 @@ void        clear_symbol_list(t_symbol **head);
 char        is_opt(char c);
 void        *map_file(t_file *file);
 int         check_file(t_file *file, void *mem);
-int         nm_compare(char *_s1, char *_s2, int (*compare)());
-int         ft_strcasecmp(const char *s1, const char *s2);
+int         nm_compare(char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)());
+int         ft_strcasecmp(const char *s1, const char *s2, char skip);
+
+#define set_type_symbol(node, shdr) \
+do {                                                                \
+    if ((node)->ndx == SHN_ABS) {                                   \
+        (node)->sym_table = (node)->bind == STB_LOCAL ? 'a' : 'A';  \
+    } else if ((node)->bind == STB_WEAK) {                          \
+        (node)->sym_table = (node)->ndx == SHN_UNDEF ? 'w' : 'W';   \
+    } else if ((node)->ndx == SHN_UNDEF) {                          \
+        (node)->sym_table = 'U';                                    \
+    } else {                                                        \
+        char r = "DDTSFBD         "[(node)->type];                  \
+        if (r == 'D') {                                             \
+            if ((node)->bind == STB_GNU_UNIQUE) {                   \
+                r = 'u';                                            \
+            } else if ((node)->bind == STB_WEAK) {                  \
+                r = 'V';                                            \
+            } else if ((node)->ndx == SHN_COMMON) {                 \
+                r = 'C';                                            \
+            } else {                                                \
+                if (((shdr).sh_flags & SHF_WRITE) == 0)             \
+                    r = 'R';                                        \
+                else if ((shdr).sh_type == SHT_NOBITS)              \
+                    r = 'B';                                        \
+            }                                                       \
+        } else if (r == 'T') {                                      \
+            if ((node)->bind == STB_WEAK)                           \
+                r = 'W';                                            \
+        }                                                           \
+        (node)->bind == STB_LOCAL ?                                 \
+            ((node)->sym_table = tolower(r)) :                      \
+            ((node)->sym_table = r);                                \
+    }                                                               \
+} while(0)
 
 #define save_symbol(info, head, mem, ehdr, t_shdr, t_sym)                   \
 do {                                                                        \
@@ -86,6 +119,7 @@ do {                                                                        \
                             0,                                              \
                             0                                               \
                         });                                                 \
+                set_type_symbol(node, shdr[sym[j].st_shndx]);               \
                 if ((info)->opt['p'])                                       \
                     add_symbol_list(head, node);                            \
                 else                                                        \
