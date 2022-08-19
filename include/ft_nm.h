@@ -52,12 +52,12 @@ void        add_file_list(t_file **head, t_file *new);
 void        clear_file_list(t_file **head);
 t_symbol    *new_symbol_node(t_symbol param);
 void        add_symbol_list(t_symbol **head, t_symbol *new);
-void        add_in_order_symbol_list(t_symbol **head, t_symbol *new, int (*compare)());
+void        add_in_order_symbol_list(t_info *info, t_symbol **head, t_symbol *new, int (*compare)());
 void        clear_symbol_list(t_symbol **head);
 char        is_opt(char c);
 void        *map_file(t_file *file);
 int         check_file(t_file *file, void *mem);
-int         nm_compare(char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)());
+int         nm_compare(t_info *info, char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)());
 int         ft_strcasecmp(const char *s1, const char *s2, char skip);
 
 #define set_type_symbol(node, shdr)                                         \
@@ -81,7 +81,7 @@ do {                                                                        \
         r = 'R';                                                            \
     } else if ((shdr).sh_flags == (SHF_ALLOC | SHF_WRITE)) {                \
         r = 'D';                                                            \
-    } else if ((shdr).sh_type == SHT_INIT_ARRAY || (shdr).sh_type == SHT_FINI_ARRAY) {              \
+    } else if ((shdr).sh_type == SHT_INIT_ARRAY || (shdr).sh_type == SHT_FINI_ARRAY) { \
         r = 'T';                                                            \
     } else if ((shdr).sh_type == SHT_DYNAMIC) {                             \
         r = 'D';                                                            \
@@ -128,7 +128,7 @@ do {                                                                        \
                 if ((info)->opt['p'])                                       \
                     add_symbol_list(head, node);                            \
                 else                                                        \
-                    add_in_order_symbol_list(head, node, nm_compare);       \
+                    add_in_order_symbol_list(info, head, node, nm_compare);       \
             }                                                               \
             break;                                                          \
         }                                                                   \

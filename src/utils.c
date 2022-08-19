@@ -61,19 +61,22 @@ void    add_symbol_list(t_symbol **head, t_symbol *new)
     }
 }
 
-void    add_in_order_symbol_list(t_symbol **head, t_symbol *new, int (*compare)())
+void    add_in_order_symbol_list(t_info *info, t_symbol **head, t_symbol *new, int (*compare)())
 {
-    if (!*head || compare((*head)->name, new->name, (*head)->value, new->value, ft_strcasecmp) >= 0) {
+    if (!*head || compare(info, (*head)->name, new->name, (*head)->value, new->value, ft_strcasecmp) >= 0) {
         new->next = *head;
+        if (*head)
+            (*head)->prev = new;
         *head = new;
-        (*head)->prev = new;
     } else {
         t_symbol *tmp = *head;
-        while (tmp->next && compare(tmp->next->name, new->name, tmp->next->value, new->value, ft_strcasecmp) < 0)
+        while (tmp->next && compare(info, tmp->next->name, new->name, tmp->next->value, new->value, ft_strcasecmp) < 0)
             tmp = tmp->next;
         new->next = tmp->next;
         tmp->next = new;
         new->prev = tmp;
+        if (tmp->next && tmp->next->next)
+            tmp->next->next->prev = new;
     }
 }
 
@@ -142,7 +145,7 @@ int     ft_strcasecmp(const char *s1, const char *s2, char skip)
     return c1 - c2;
 }
 
-int     nm_compare(char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)())
+int     nm_compare(t_info *info, char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)())
 {
     char *s1 = _s1;
     char *s2 = _s2;
@@ -153,7 +156,7 @@ int     nm_compare(char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare
     while (*s2 && !isalpha(*s2))
         s2++;
     if (!(ret = compare(s1, s2, 1))) {
-        if (!(ret = compare(_s1, _s2, 0))) {
+        if (!(ret = compare(_s1, _s2, 0)) && !info->opt['r']) {
             ret = v1 - v2;
         }
     }

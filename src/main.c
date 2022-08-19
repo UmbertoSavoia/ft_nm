@@ -32,9 +32,18 @@ void    print_line(t_symbol *s, int arch)
 
 void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
 {
+    t_symbol *s = 0;
+
+    if (info->opt['r']) {
+        t_symbol *tmp = 0;
+        for (tmp = sym; tmp->next; tmp = tmp->next);
+        s = tmp;
+    } else {
+        s = sym;
+    }
     if (info->nfiles > 1)
         printf("\n%s:\n", file->name);
-    for (t_symbol *s = sym; s; s = s->next) {
+    while (s) {
         if (info->opt['u']) {
             if (s->ndx == SHN_UNDEF)
                 print_line(s, arch);
@@ -49,6 +58,10 @@ void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
         else if ((s->type != STT_SECTION) && (s->type != STT_FILE)) {
             print_line(s, arch);
         }
+        if (info->opt['r'])
+            s = s->prev;
+        else
+            s = s->next;
     }
 }
 
