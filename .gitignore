@@ -1,6 +1,7 @@
 ft_nm
 .idea
 .vscode
+.gdb_history
 # Prerequisites
 *.d
 

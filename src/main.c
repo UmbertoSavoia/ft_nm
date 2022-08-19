@@ -35,14 +35,20 @@ void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
     if (info->nfiles > 1)
         printf("\n%s:\n", file->name);
     for (t_symbol *s = sym; s; s = s->next) {
-        if (info->opt['u'] && s->ndx == SHN_UNDEF)
+        if (info->opt['u']) {
+            if (s->ndx == SHN_UNDEF)
+                print_line(s, arch);
+        }
+        else if (info->opt['g']) {
+            if (s->bind == STB_WEAK || s->bind == STB_GLOBAL)
+                print_line(s, arch);
+        }
+        else if (info->opt['a']) {
             print_line(s, arch);
-        else if (info->opt['g'] && (s->bind == STB_WEAK || s->bind == STB_GLOBAL))
+        }
+        else if ((s->type != STT_SECTION) && (s->type != STT_FILE)) {
             print_line(s, arch);
-        else if (info->opt['a'])
-            print_line(s, arch);
-        else if ((s->type != STT_SECTION) && (s->type != STT_FILE))
-            print_line(s, arch);
+        }
     }
 }
 

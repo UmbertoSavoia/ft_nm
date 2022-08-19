@@ -60,37 +60,42 @@ int         check_file(t_file *file, void *mem);
 int         nm_compare(char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)());
 int         ft_strcasecmp(const char *s1, const char *s2, char skip);
 
-#define set_type_symbol(node, shdr) \
-do {                                                                \
-    if ((node)->ndx == SHN_ABS) {                                   \
-        (node)->sym_table = (node)->bind == STB_LOCAL ? 'a' : 'A';  \
-    } else if ((node)->bind == STB_WEAK) {                          \
-        (node)->sym_table = (node)->ndx == SHN_UNDEF ? 'w' : 'W';   \
-    } else if ((node)->ndx == SHN_UNDEF) {                          \
-        (node)->sym_table = 'U';                                    \
-    } else {                                                        \
-        char r = "DDTSFBD         "[(node)->type];                  \
-        if (r == 'D') {                                             \
-            if ((node)->bind == STB_GNU_UNIQUE) {                   \
-                r = 'u';                                            \
-            } else if ((node)->bind == STB_WEAK) {                  \
-                r = 'V';                                            \
-            } else if ((node)->ndx == SHN_COMMON) {                 \
-                r = 'C';                                            \
-            } else {                                                \
-                if (((shdr).sh_flags & SHF_WRITE) == 0)             \
-                    r = 'R';                                        \
-                else if ((shdr).sh_type == SHT_NOBITS)              \
-                    r = 'B';                                        \
-            }                                                       \
-        } else if (r == 'T') {                                      \
-            if ((node)->bind == STB_WEAK)                           \
-                r = 'W';                                            \
-        }                                                           \
-        (node)->bind == STB_LOCAL ?                                 \
-            ((node)->sym_table = tolower(r)) :                      \
-            ((node)->sym_table = r);                                \
-    }                                                               \
+#define set_type_symbol(node, shdr)                                         \
+do {                                                                        \
+    char r = '?';                                                           \
+    if ((node)->ndx == SHN_ABS) {                                           \
+        r = (node)->bind == STB_LOCAL ? 'a' : 'A';                          \
+    } else if ((node)->bind == STB_WEAK) {                                  \
+        r = (node)->ndx == SHN_UNDEF ? 'w' : 'W';                           \
+    } else if ((node)->bind == STB_WEAK && (node)->type == STT_OBJECT) {    \
+        r = 'V';                                                            \
+    } else if ((node)->ndx == SHN_UNDEF) {                                  \
+        r = 'U';                                                            \
+    } else if ((node)->ndx == SHN_COMMON) {                                 \
+        r = 'C';                                                            \
+    } else if ((node)->bind == STB_GNU_UNIQUE) {                            \
+        r = 'u';                                                            \
+    } else if ((shdr).sh_type == SHT_NOBITS) {                              \
+        r = 'B';                                                            \
+    } else if ((shdr).sh_flags == (SHF_ALLOC | SHF_MERGE)) {                \
+        r = 'R';                                                            \
+    } else if ((shdr).sh_flags == (SHF_ALLOC | SHF_WRITE)) {                \
+        r = 'D';                                                            \
+    } else if ((shdr).sh_type == SHT_INIT_ARRAY || (shdr).sh_type == SHT_FINI_ARRAY) {              \
+        r = 'T';                                                            \
+    } else if ((shdr).sh_type == SHT_DYNAMIC) {                             \
+        r = 'D';                                                            \
+    } else if ((shdr).sh_flags == (SHF_ALLOC | SHF_EXECINSTR)) {            \
+        r = 'T';                                                            \
+    } else if ((shdr).sh_flags & SHF_ALLOC) {                               \
+        r = 'R';                                                            \
+    } else {                                                                \
+        r = 'N';                                                            \
+    }                                                                       \
+    (node)->bind == STB_LOCAL ?                                             \
+        ((node)->sym_table = tolower(r)) : ((node)->sym_table = r);         \
+    if (!memcmp((node)->name, ".debug", 6))                                 \
+        (node)->sym_table = 'N';                                            \
 } while(0)
 
 #define save_symbol(info, head, mem, ehdr, t_shdr, t_sym)                   \
