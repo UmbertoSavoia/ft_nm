@@ -6,7 +6,7 @@ void    parse_arg(int ac, char **av, t_info *info)
         if (av[i][0] == '-') {
             for (int j = 0; av[i][j]; ++j) {
                 if (is_opt(av[i][j]))
-                    info->opt[av[i][j]] = 1;
+                    info->opt[(unsigned char)av[i][j]] = 1;
             }
         } else {
             add_file_list(&(info->files), new_file_node(av[i]));
@@ -24,10 +24,10 @@ void    parse_arg(int ac, char **av, t_info *info)
 void    print_line(t_symbol *s, int arch)
 {
     if (s->ndx == SHN_UNDEF)
-        printf("%*c", arch, ' ');
+        nm_print(1, "%*c", arch, ' ');
     else
-        printf("%0*lx", arch, s->value);
-    printf(" %c %s\n", s->sym_table, s->name);
+        nm_print(1, "%0*x", arch, s->value);
+    nm_print(1, " %c %s\n", s->sym_table, s->name);
 }
 
 void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
@@ -42,7 +42,7 @@ void    print_symbols(t_info *info, t_file *file, t_symbol *sym, int arch)
         s = sym;
     }
     if (info->nfiles > 1)
-        printf("\n%s:\n", file->name);
+        nm_print(1, "\n%s:\n", file->name);
     while (s) {
         if (info->opt['u']) {
             if (s->ndx == SHN_UNDEF)
@@ -85,7 +85,7 @@ int     do_file(t_info *info, t_file *file)
                   sizeof(Elf32_Addr)*2 :
                   sizeof(Elf64_Addr)*2);
     if (!head)
-        fprintf(stderr, "ft_nm: '%s': %s\n", file->name, "no symbols");
+        nm_print(2, "ft_nm: '%s': %s\n", file->name, "no symbols");
     clear_symbol_list(&head);
     munmap(mem, file->size);
     return 1;

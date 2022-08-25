@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 typedef struct  s_file
 {
@@ -40,7 +41,7 @@ typedef struct  s_symbol
 
 #define error(file, msg)                                    \
     do {                                                    \
-        fprintf(stderr, "ft_nm: '%s': %s\n", file, msg);    \
+        nm_print(2, "ft_nm: '%s': %s\n", file, msg);        \
         return 0;                                           \
     } while (0)
 
@@ -60,6 +61,11 @@ void        *map_file(t_file *file);
 int         check_file(t_file *file, void *mem);
 int         nm_compare(t_info *info, char *_s1, char *_s2, uint64_t v1, uint64_t v2, int (*compare)());
 int         ft_strcasecmp(const char *s1, const char *s2, char skip);
+
+/**
+ * print.c
+ */
+void    nm_print(int fd, const char *fmt, ...);
 
 #define set_type_symbol(node, shdr)                                         \
 do {                                                                        \

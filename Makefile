@@ -1,6 +1,6 @@
 TARGET = ft_nm
 CC = gcc
-CFLAGS = -g#-Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
 SRC = $(wildcard ./src/*.c)
