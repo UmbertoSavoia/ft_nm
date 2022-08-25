@@ -1,5 +1,25 @@
 #include "../include/ft_nm.h"
 
+int     ft_memcmp(const void *s1, const void *s2, size_t n)
+{
+    const unsigned char *su1;
+    const unsigned char *su2;
+    int                 ret;
+
+    su1 = s1;
+    su2 = s2;
+    ret = 0;
+    while (0 < n)
+    {
+        if ((ret = *su1 - *su2) != 0)
+            break ;
+        su1++;
+        su2++;
+        n--;
+    }
+    return (ret);
+}
+
 t_file  *new_file_node(char *name)
 {
     t_file *ret = 0;
@@ -123,7 +143,7 @@ int     check_file(t_file *file, void *mem)
     unsigned char *e_ident = mem;
     unsigned char magic[] = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3};
 
-    if (memcmp(mem, magic, sizeof(magic)))
+    if (ft_memcmp(mem, magic, sizeof(magic)))
         error(file->name, "file format not recognized");
     if (e_ident[EI_CLASS] != ELFCLASS32 && e_ident[EI_CLASS] != ELFCLASS64)
         error(file->name, "class not recognized");

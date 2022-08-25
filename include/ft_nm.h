@@ -47,6 +47,7 @@ typedef struct  s_symbol
 /**
  * utils.c
  */
+int         ft_memcmp(const void *s1, const void *s2, size_t n);
 t_file      *new_file_node(char *name);
 void        add_file_list(t_file **head, t_file *new);
 void        clear_file_list(t_file **head);
@@ -94,7 +95,7 @@ do {                                                                        \
     }                                                                       \
     (node)->bind == STB_LOCAL ?                                             \
         ((node)->sym_table = tolower(r)) : ((node)->sym_table = r);         \
-    if (!memcmp((node)->name, ".debug", 6))                                 \
+    if (!ft_memcmp((node)->name, ".debug", 6))                              \
         (node)->sym_table = 'N';                                            \
 } while(0)
 
