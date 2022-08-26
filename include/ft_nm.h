@@ -1,5 +1,5 @@
-#ifndef FT_NM_FT_NM_H
-#define FT_NM_FT_NM_H
+#ifndef FT_NM_H
+#define FT_NM_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -135,7 +135,7 @@ do {                                                                        \
                 if ((info)->opt['p'])                                       \
                     add_symbol_list(head, node);                            \
                 else                                                        \
-                    add_in_order_symbol_list(info, head, node, nm_compare);       \
+                    add_in_order_symbol_list(info, head, node, nm_compare); \
             }                                                               \
             break;                                                          \
         }                                                                   \
